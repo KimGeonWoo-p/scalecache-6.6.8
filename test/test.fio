@@ -1,0 +1,21 @@
+[global]
+# 실제 파일 시스템 pxt4가 마운트된 경로를 지정하세요
+directory=/mnt/pxt4_mount_point
+filename=scalecache_test_file
+size=10G
+direct=0            # Buffered I/O를 사용해야 커널의 Writeback 로직(ScaleCache)이 작동함
+ioengine=libaio     # 리눅스 네이티브 비동기 I/O 엔진
+runtime=300
+time_based
+group_reporting
+
+[scalecache_write_test]
+rw=write            # 순차 쓰기 (Sequential Write) 테스트
+bs=4k               # 페이지 단위(4KB) 쓰기로 커널 MM 계층 부하 극대화
+iodepth=32          # I/O 요청을 쌓아서 처리량 확인
+numjobs=4           # 멀티 스레드 상황에서 스레드 간 경합 및 직접 쓰기 효율 측정
+fsync_on_close=1    # 테스트 종료 시점에 실제 디스크 쓰기 완료 보장
+
+# 추가적인 관찰 포인트 (Latency 분포 확인)
+clat_percentiles=1
+percentile_list=50:90:99:99.9:99.99
