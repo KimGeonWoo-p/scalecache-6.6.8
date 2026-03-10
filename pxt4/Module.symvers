@@ -1,3 +1,0 @@
-0x5730553c	pxt4_balance_dirty_pages_ratelimited_flags	/home/syslab/syslab/scale_cache/pxt4/pxt4	EXPORT_SYMBOL_GPL	
-0x73cb30f9	pxt4_balance_dirty_pages_ratelimited	/home/syslab/syslab/scale_cache/pxt4/pxt4	EXPORT_SYMBOL	
-0x26d8232a	pxt4_try_to_free_buffers	/home/syslab/syslab/scale_cache/pxt4/pxt4	EXPORT_SYMBOL	

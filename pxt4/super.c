@@ -7336,14 +7336,16 @@ MODULE_ALIAS_FS("pxt4");
 /* Shared across all pxt4 file systems */
 wait_queue_head_t pxt4__ioend_wq[PXT4_WQ_HASH_SZ];
 
-// ziggy
-extern void (*wb_workfn_in_pxt4)(struct work_struct *work);
-extern void pxt4_wb_workfn(struct work_struct *work);
-//
+extern int (*balance_dirty_pages_module)(struct bdi_writeback *wb,
+		unsigned long pages_dirtied, unsigned int flags);
+extern int df_balance_dirty_pages(struct bdi_writeback *wb,
+		unsigned long pages_dirtied, unsigned int flags);
 
 static int __init pxt4_init_fs(void)
 {
 	int i, err;
+
+	balance_dirty_pages_module = &df_balance_dirty_pages;
 
 	ratelimit_state_init(&pxt4_mount_msg_ratelimit, 30 * HZ, 64);
 	pxt4_li_info = NULL;
@@ -7395,9 +7397,6 @@ static int __init pxt4_init_fs(void)
 	if (err)
 		goto out;
 
-	/* assign wb_workfn */
-	wb_workfn_in_pxt4 = &pxt4_wb_workfn;
-
 	return 0;
 out:
 	unregister_as_pxt2();
@@ -7425,6 +7424,8 @@ out7:
 
 static void __exit pxt4_exit_fs(void)
 {
+	balance_dirty_pages_module = NULL;
+
 	pxt4_destroy_lazyinit_thread();
 	unregister_as_pxt2();
 	unregister_as_ext3();
@@ -7438,8 +7439,6 @@ static void __exit pxt4_exit_fs(void)
 	pxt4_exit_post_read_processing();
 	pxt4_exit_es();
 	pxt4_exit_pending();
-
-	wb_workfn_in_pxt4 = NULL;
 }
 
 MODULE_AUTHOR("Remy Card, Stephen Tweedie, Andrew Morton, Andreas Dilger, Theodore Ts'o and others");

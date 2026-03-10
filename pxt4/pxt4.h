@@ -744,15 +744,14 @@ enum {
 /*
  * ioctl commands in 32 bit emulation
  */
-// [kernel dir]/include/uapi/linux/pxt4.h에 중복 정의된 내용
-// #define PXT4_IOC32_GETVERSION		_IOR('f', 3, int)
-// #define PXT4_IOC32_SETVERSION		_IOW('f', 4, int)
-// #define PXT4_IOC32_GETRSVSZ		_IOR('f', 5, int)
-// #define PXT4_IOC32_SETRSVSZ		_IOW('f', 6, int)
-// #define PXT4_IOC32_GROUP_EXTEND		_IOW('f', 7, unsigned int)
-// #define PXT4_IOC32_GROUP_ADD		_IOW('f', 8, struct compat_pxt4_new_group_input)
-// #define PXT4_IOC32_GETVERSION_OLD	FS_IOC32_GETVERSION
-// #define PXT4_IOC32_SETVERSION_OLD	FS_IOC32_SETVERSION
+#define PXT4_IOC32_GETVERSION		_IOR('f', 3, int)
+#define PXT4_IOC32_SETVERSION		_IOW('f', 4, int)
+#define PXT4_IOC32_GETRSVSZ		_IOR('f', 5, int)
+#define PXT4_IOC32_SETRSVSZ		_IOW('f', 6, int)
+#define PXT4_IOC32_GROUP_EXTEND		_IOW('f', 7, unsigned int)
+#define PXT4_IOC32_GROUP_ADD		_IOW('f', 8, struct compat_pxt4_new_group_input)
+#define PXT4_IOC32_GETVERSION_OLD	FS_IOC32_GETVERSION
+#define PXT4_IOC32_SETVERSION_OLD	FS_IOC32_SETVERSION
 #endif
 
 /* Max physical block we can address w/o extents */
