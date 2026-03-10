@@ -2275,9 +2275,31 @@ long wb_do_writeback(struct bdi_writeback *wb)
 }
 EXPORT_SYMBOL(wb_do_writeback);
 
-// let function defined in scext4 get in
-void (*wb_workfn_in_pxt4)(struct work_struct *work) = NULL;
-EXPORT_SYMBOL(wb_workfn_in_pxt4);
+/*
+ * User thread do the writeback works they describe
+ */
+long wb_do_writeback_modified(struct bdi_writeback *wb)
+{
+        long wrote = 0;
+
+        if (!__sync_fetch_and_add(&wb->nr_threads, 1))
+                set_bit(WB_writeback_running, &wb->state);
+
+        //wrote += scext4_wb_check_start_all(wb);
+        wrote += wb_check_start_all(wb);
+
+        //wrote += scext4_wb_check_old_data_flush(wb);
+        wrote += wb_check_old_data_flush(wb);
+
+        wrote += wb_check_background_flush(wb);
+        //wrote += wb_check_background_flush(wb);
+
+        if (__sync_sub_and_fetch(&wb->nr_threads, 1))
+                clear_bit(WB_writeback_running, &wb->state);
+
+        return wrote;
+}
+EXPORT_SYMBOL(wb_do_writeback_modified);
 
 /*
  * Handle writeback of dirty data for the device backed by this bdi. Also
@@ -2288,11 +2310,6 @@ void wb_workfn(struct work_struct *work)
 	struct bdi_writeback *wb = container_of(to_delayed_work(work),
 						struct bdi_writeback, dwork);
 	long pages_written;
-
-	if (wb_workfn_in_pxt4) {
-		(*wb_workfn_in_pxt4)(work);
-		return;
-	}
 
 	set_worker_desc("flush-%s", bdi_dev_name(wb->bdi));
 

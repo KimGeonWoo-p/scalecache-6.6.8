@@ -99,7 +99,7 @@ long wb_min_pause(struct bdi_writeback *wb,
 			 unsigned long task_ratelimit,
 			 unsigned long dirty_ratelimit,
 			 int *nr_dirtied_pause);
-long wb_do_writeback(struct bdi_writeback *wb);
+long wb_do_writeback_modified(struct bdi_writeback *wb);
 
 int df_balance_dirty_pages(struct bdi_writeback *wb,
 			       unsigned long pages_dirtied, unsigned int flags)
@@ -357,9 +357,9 @@ pause:
 		}
 		__set_current_state(TASK_KILLABLE);
 		wb->dirty_sleep = now;
-		//io_schedule_timeout(pause);
+		io_schedule_timeout(pause);
 
-		wb_do_writeback(wb);
+		wb_do_writeback_modified(wb);
 
 		current->dirty_paused_when = now + pause;
 		current->nr_dirtied = 0;
