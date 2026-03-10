@@ -3,19 +3,14 @@
 # 논문 환경: 64개 스레드(코어 수와 동일), libaio 엔진 사용
 
 ioengine=libaio
-
 direct=0            # Buffered I/O (ScaleCache 성능 확인용)
-
 numjobs=64          # 64-core machine 재현
-
 group_reporting
+;verity=meta	    # 구현 검증용
 
-thread
-
-runtime=300         # 충분한 측정을 위한 시간 설정
-
-time_based
-
+;thread
+;runtime=300         # 충분한 측정을 위한 시간 설정
+;time_based
 
 
 [scalecache_repro]
@@ -23,11 +18,7 @@ time_based
 # 논문 설정: 4KB 요청 크기, 스레드당 3GB 파일
 
 rw=write            # sequential write (Figure 11b 재현)
-
 bs=4k               # 기본 요청 크기
-
 size=3G             # 스레드당 파일 크기
-
-directory=./mnt
-
+directory=/mnt/test
 filename_format=fio-test-dot-$jobnum

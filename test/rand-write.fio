@@ -1,18 +1,16 @@
 [global]
 # 논문 환경: 64개 스레드 활용
-ioengine=libaio
+;ioengine=libaio
 direct=0            # Buffered I/O (ScaleCache의 핵심 테스트 조건)
 numjobs=64          # 코어 수와 동일하게 설정
 group_reporting
-thread
-runtime=120         # 2분간 충분히 테스트
-time_based
+;verify=meta
 
 [scalecache_randwrite]
 # 논문 Figure 11a 재현 설정
 rw=randwrite        # Random Write (임의 쓰기)
 bs=4k               # 논문 표준 블록 사이즈
 size=3G             # 스레드당 파일 크기 (총 192GB 부하)
-directory=./mnt     # RAID-0(md127)이 마운트된 경로로 수정하세요
+directory=/mnt/test     # RAID-0(md127)이 마운트된 경로로 수정하세요
 filename_format=fio-rand-$jobnum
-iodepth=1           # Buffered I/O에서는 기본적으로 1로 동작 (전체 병렬성은 numjobs가 담당)
+;iodepth=1           # Buffered I/O에서는 기본적으로 1로 동작 (전체 병렬성은 numjobs가 담당)
