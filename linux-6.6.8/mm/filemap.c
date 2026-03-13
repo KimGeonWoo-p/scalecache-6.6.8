@@ -2650,11 +2650,19 @@ reset:
  *
  * Return: The number of entries which were found.
  */
+
+unsigned cc_find_get_entries(struct address_space *mapping, pgoff_t *start,
+		pgoff_t end, struct folio_batch *fbatch, pgoff_t *indices);
+
 unsigned find_get_entries(struct address_space *mapping, pgoff_t *start,
 		pgoff_t end, struct folio_batch *fbatch, pgoff_t *indices)
 {
 	XA_STATE(xas, &mapping->i_pages, *start);
 	struct folio *folio;
+
+	if (cc_xas_is_ccxarray(&xas))
+		return cc_find_get_entries(mapping, start, end, fbatch, indices);
+
 
 	rcu_read_lock();
 	while ((folio = find_get_entry(&xas, end, XA_PRESENT)) != NULL) {
@@ -2670,6 +2678,32 @@ unsigned find_get_entries(struct address_space *mapping, pgoff_t *start,
 
 		folio = fbatch->folios[idx];
 		if (!xa_is_value(folio) && !folio_test_hugetlb(folio))
+			nr = folio_nr_pages(folio);
+		*start = indices[idx] + nr;
+	}
+	return folio_batch_count(fbatch);
+}
+
+unsigned cc_find_get_entries(struct address_space *mapping, pgoff_t *start,
+		pgoff_t end, struct folio_batch *fbatch, pgoff_t *indices)
+{
+	CC_XA_STATE(xas, CC_XARRAY(&mapping->i_pages), *start);
+	struct folio *folio;
+
+	// rcu_read_lock();
+	while ((folio = cc_find_get_entry(&xas, end, XA_PRESENT)) != NULL) {
+		indices[fbatch->nr] = xas.xa_index;
+		if (!folio_batch_add(fbatch, folio))
+			break;
+	}
+	// rcu_read_unlock();
+
+	if (folio_batch_count(fbatch)) {
+		unsigned long nr = 1;
+		int idx = folio_batch_count(fbatch) - 1;
+
+		folio = fbatch->folios[idx];
+		if (!cc_xa_is_value(folio) && !folio_test_hugetlb(folio))
 			nr = folio_nr_pages(folio);
 		*start = indices[idx] + nr;
 	}

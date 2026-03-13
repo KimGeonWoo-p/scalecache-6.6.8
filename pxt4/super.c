@@ -60,6 +60,8 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/pxt4.h>
 
+#include <linux/cc_xarray.h>
+
 static struct pxt4_lazy_init *pxt4_li_info;
 static DEFINE_MUTEX(pxt4_li_mtx);
 static struct ratelimit_state pxt4_mount_msg_ratelimit;
@@ -1478,6 +1480,29 @@ static void pxt4_shutdown(struct super_block *sb)
        pxt4_force_shutdown(sb, PXT4_GOING_FLAGS_NOLOGFLUSH);
 }
 
+static void __cc_address_space_init_once(struct address_space *mapping)
+{
+	cc_xa_init_flags(CC_XARRAY(&mapping->i_pages), CC_XA_FLAGS_LOCK_IRQ | CC_XA_FLAGS_ACCOUNT);
+	init_rwsem(&mapping->i_mmap_rwsem);
+	INIT_LIST_HEAD(&mapping->private_list);
+	spin_lock_init(&mapping->private_lock);
+	mapping->i_mmap = RB_ROOT_CACHED;
+	printk("[%s] init CC_XARRAY\n", __func__);
+}
+
+void cc_inode_init_once(struct inode *inode)
+{
+	memset(inode, 0, sizeof(*inode));
+	INIT_HLIST_NODE(&inode->i_hash);
+	INIT_LIST_HEAD(&inode->i_devices);
+	INIT_LIST_HEAD(&inode->i_io_list);
+	INIT_LIST_HEAD(&inode->i_wb_list);
+	INIT_LIST_HEAD(&inode->i_lru);
+	INIT_LIST_HEAD(&inode->i_sb_list);
+	__cc_address_space_init_once(&inode->i_data);
+	i_size_ordered_init(inode);
+}
+
 static void init_once(void *foo)
 {
 	struct pxt4_inode_info *ei = foo;
@@ -1485,7 +1510,7 @@ static void init_once(void *foo)
 	INIT_LIST_HEAD(&ei->i_orphan);
 	init_rwsem(&ei->xattr_sem);
 	init_rwsem(&ei->i_data_sem);
-	inode_init_once(&ei->vfs_inode);
+	cc_inode_init_once(&ei->vfs_inode);
 	pxt4_fc_init_inode(&ei->vfs_inode);
 }
 
